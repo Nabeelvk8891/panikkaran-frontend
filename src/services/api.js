@@ -1,10 +1,11 @@
+// api.js
 import axios from "axios";
 import { logout } from "../utils/auth";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_BACKEND_URL + "/api",
+  withCredentials: true,
 });
-
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -24,7 +25,6 @@ api.interceptors.response.use(
       error.response?.data?.code === "USER_BLOCKED"
     ) {
       logout();
-
       window.location.href = "/login?blocked=true";
     }
 
