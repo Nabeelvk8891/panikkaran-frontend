@@ -44,45 +44,8 @@ export default function App() {
   const myId = auth?.user?._id;
 
   /* ================= SOCKET PRESENCE ================= */
-useEffect(() => {
-  if (!myId) return;
 
-  if (!socket.connected) {
-    socket.connect();
-  }
 
-  const onConnect = () => {
-    console.log("🟢 socket connected:", socket.id);
-    socket.emit("online", myId);
-    socket.emit("online-check");
-  };
-
-  socket.on("connect", onConnect);
-
-  if (socket.connected) {
-    onConnect();
-  }
-
-  return () => {
-    socket.off("connect", onConnect);
-  };
-}, [myId]);
-
-useEffect(() => {
-  if (!myId) return;
-
-  const handleUnload = () => {
-    socket.emit("offline");
-  };
-
-  window.addEventListener("beforeunload", handleUnload);
-  window.addEventListener("pagehide", handleUnload); 
-
-  return () => {
-    window.removeEventListener("beforeunload", handleUnload);
-    window.removeEventListener("pagehide", handleUnload);
-  };
-}, [myId]);
 
 
 

@@ -2,3 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #6b7280; /* gray-500 */
+  border-radius: 50%;
+  animation: blink 1.4s infinite both;
+}
+
+.delay-1 {
+  animation-delay: 0.2s;
+}
+
+.delay-2 {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.2;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}

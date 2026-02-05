@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <NotificationProvider>
           <ChatProvider>
           <App />
-            <Toaster position="top-right" />
+            <Toaster position="top-left" />
           </ChatProvider>
         </NotificationProvider>
       </BrowserRouter>

@@ -37,10 +37,20 @@ export default function ChatItem({ chat, onClick }) {
       ? chat.lastMessage.text
       : null;
 
-  const lastTime =
-    chat.lastMessage && typeof chat.lastMessage === "object"
-      ? chat.lastMessage.createdAt
-      : null;
+ let lastTime = null;
+
+if (chat.lastMessage && typeof chat.lastMessage === "object") {
+  const t = new Date(chat.lastMessage.createdAt);
+  if (!isNaN(t.getTime())) {
+    lastTime = t;
+  }
+}
+if (!lastTime && chat.updatedAt) {
+  const t = new Date(chat.updatedAt);
+  if (!isNaN(t.getTime())) {
+    lastTime = t;
+  }
+}
 
   return (
     <div

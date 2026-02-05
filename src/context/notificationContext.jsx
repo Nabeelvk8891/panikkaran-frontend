@@ -5,10 +5,9 @@ import { getUser } from "../utils/auth";
 import { notificationSound } from "../utils/notificationSound";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useChat } from "./ChatContext";
 
 const NotificationContext = createContext();
-
-
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
@@ -16,11 +15,13 @@ export const NotificationProvider = ({ children }) => {
 
   const navigate = useNavigate();
 
+  // 🔒 SAFE access to ChatContext (prevents crash)
+  const chatCtx = useChat();
+  const activeChatId = chatCtx?.activeChatId ?? null;
+
   /* ================= AUTH SYNC ================= */
   useEffect(() => {
-    const syncUser = () => {
-      setUser(getUser());
-    };
+    const syncUser = () => setUser(getUser());
 
     window.addEventListener("storage", syncUser);
     window.addEventListener("auth-change", syncUser);
@@ -39,83 +40,105 @@ export const NotificationProvider = ({ children }) => {
     }
 
     getNotifications()
-      .then((res) => setNotifications(res.data))
+      .then((res) => {
+        // 🔒 Always normalize to array
+        setNotifications(res?.data?.notifications || []);
+      })
       .catch(() => setNotifications([]));
   }, [user]);
 
   /* ================= SOCKET ================= */
-  useEffect(() => {
-    if (!user?._id) return;
+ useEffect(() => {
+  if (!user?._id) return;
 
+const handleNewNotification = (data) => {
+  if (!data) return;
 
-    const handleNewNotification = (data) => {
-      // update state
-      setNotifications((prev) => {
-  const index = prev.findIndex(
-    (n) => n._id === data._id
-  );
-  if (index !== -1) {
-    const copy = [...prev];
-    copy[index] = data;
-    return copy;
-  }
+  // 🔕 If user is already inside the same chat, suppress sound + toast
+  if (
+    data.type === "message" &&
+    data.meta?.chatId &&
+    data.meta.chatId === activeChatId
+  ) {
+    setNotifications((prev) => {
+      if (!Array.isArray(prev)) return prev;
 
-  return [data, ...prev];
-});
-
-
-      // 🔊 play sound (Howler – instant & full)
-      try {
-        notificationSound.play();
-      } catch (err) {
-        // ignore autoplay errors
+      const index = prev.findIndex((n) => n._id === data._id);
+      if (index !== -1) {
+        const copy = [...prev];
+        copy[index] = data;
+        return copy;
       }
 
-      // toast (click → notifications page)
-      toast.custom(
-        (t) => (
-          <div
-onClick={() => {
-  toast.dismiss(t.id);
+      return [data, ...prev];
+    });
 
-  if (data.type === "message" && data.meta?.appointmentId) {
-    navigate(`/appointments?chat=${data.meta.appointmentId}`);
-  } else {
-    navigate("/notifications");
+    return;
   }
-}}
+
+  /* ================= UPDATE STATE ================= */
+  setNotifications((prev) => {
+    if (!Array.isArray(prev)) return [data];
+
+    const index = prev.findIndex((n) => n._id === data._id);
+    if (index !== -1) {
+      const copy = [...prev];
+      copy[index] = data;
+      return copy;
+    }
+
+    return [data, ...prev];
+  });
+
+  /* ================= SOUND ================= */
+  try {
+    notificationSound.play();
+  } catch {}
+
+  /* ================= TOAST ================= */
+  toast.custom(
+    (t) => (
+      <div
+        onClick={() => {
+          toast.dismiss(t.id);
+
+          if (data.type === "message" && data.meta?.appointmentId) {
+            navigate(`/appointments?chat=${data.meta.appointmentId}`);
+          } else {
+            navigate("/notifications");
+          }
+        }}
+        className="
+          cursor-pointer
+          bg-white border shadow-lg rounded-xl
+          px-4 py-3 max-w-sm
+          hover:bg-gray-50 transition
+        "
+      >
+        <p className="font-medium text-gray-800">{data.title}</p>
+        <p className="text-sm text-gray-600 mt-1">{data.message}</p>
+      </div>
+    ),
+    { duration: 4000 }
+  );
+};
 
 
-            className="
-              cursor-pointer
-              bg-white border shadow-lg rounded-xl
-              px-4 py-3 max-w-sm
-              hover:bg-gray-50 transition
-            "
-          >
-            <p className="font-medium text-gray-800">
-              {data.title}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {data.message}
-            </p>
-          </div>
-        ),
-        { duration: 4000 }
-      );
-    };
+
+    /* ---------- CHAT MESSAGE NOTIFICATION ---------- */
+  
 
     socket.on("new-notification", handleNewNotification);
 
     return () => {
       socket.off("new-notification", handleNewNotification);
     };
-  }, [user]);
+  }, [user, navigate, activeChatId]);
 
   /* ================= DERIVED ================= */
-  const unreadCount = notifications.filter(
-    (n) => !n.isRead
-  ).length;
+  const unreadCount = Array.isArray(notifications)
+    ? notifications.filter((n) => !n.isRead).length
+    : 0;
 
   return (
     <NotificationContext.Provider
@@ -126,5 +149,4 @@ onClick={() => {
   );
 };
 
-export const useNotifications = () =>
-  useContext(NotificationContext);
+export const useNotifications = () => useContext(NotificationContext);

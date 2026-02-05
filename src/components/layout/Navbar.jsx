@@ -21,8 +21,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
-  const { unreadChatCount } = useChat();
-
+  const { unreadChatCount, unreadHydrated } = useChat();  
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -123,7 +122,7 @@ export default function Navbar() {
                   icon={
                     <div className="relative w-5 h-5 flex items-center justify-center">
                       <FiMessageCircle className="text-xl scale-110" />
-                      {unreadChatCount > 0 && (
+                      {unreadHydrated && unreadChatCount > 0 && (
                         <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center">
                           {unreadChatCount}
                         </span>
@@ -184,7 +183,7 @@ export default function Navbar() {
     >
       <FiMessageCircle className="text-xl scale-110" />
 
-      {unreadChatCount > 0 && (
+      {unreadHydrated && unreadChatCount > 0 && (
         <span
           className="
             absolute -top-2 -right-2
@@ -288,7 +287,7 @@ export default function Navbar() {
                     <FiMessageCircle className="text-lg" />
                     <span>Chats</span>
                   </div>
-                  {unreadChatCount > 0 && (
+                  {unreadHydrated && unreadChatCount > 0 && (
                     <span className="bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                       {unreadChatCount}
                     </span>

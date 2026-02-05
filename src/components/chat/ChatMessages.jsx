@@ -14,11 +14,18 @@ export default function ChatMessages({
   const isNearBottomRef = useRef(true);
 
   const [swipeX, setSwipeX] = useState({});
+  const [showScrollDown, setShowScrollDown] = useState(false);
+
 
   /* WhatsApp-like tuning */
   const MAX_SWIPE = 36;
   const TRIGGER = 22;
   const RESISTANCE = 0.4;
+
+  const isMobile =
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
+
 
   /* ================= SCROLL TRACK ================= */
 
@@ -27,23 +34,71 @@ export default function ChatMessages({
     if (!container) return;
 
     const handleScroll = () => {
-      const threshold = 80;
-      const distanceFromBottom =
-        container.scrollHeight -
-        container.scrollTop -
-        container.clientHeight;
+  const threshold = 80;
+  const distanceFromBottom =
+    container.scrollHeight -
+    container.scrollTop -
+    container.clientHeight;
 
-      isNearBottomRef.current = distanceFromBottom < threshold;
-    };
+  const nearBottom = distanceFromBottom < threshold;
+  isNearBottomRef.current = nearBottom;
+
+  if (nearBottom) {
+    setShowScrollDown(false);
+  }
+};
+
 
     container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
+    return () =>
+      container.removeEventListener("scroll", handleScroll);
   }, []);
 
+useEffect(() => {
+  if (isNearBottomRef.current) {
+    bottomRef.current?.scrollIntoView({
+  behavior: isMobile ? "auto" : "smooth",
+});
+
+  } else {
+    setShowScrollDown(true); 
+  }
+}, [messages]);
+
+useEffect(() => {
+  if (!typing) return;
+
+  if (isNearBottomRef.current) {
+    bottomRef.current?.scrollIntoView({
+      behavior: isMobile ? "auto" : "smooth",
+    });
+  }
+}, [typing]);
+
+
+  /* ================= SCROLL REQUEST LISTENER (NEW) ================= */
+
   useEffect(() => {
-    if (!isNearBottomRef.current) return;
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const handleScrollRequest = () => {
+  isNearBottomRef.current = true; 
+  bottomRef.current?.scrollIntoView({
+  behavior: isMobile ? "auto" : "smooth",
+});
+
+};
+
+
+    window.addEventListener(
+      "chat-scroll-bottom",
+      handleScrollRequest
+    );
+
+    return () =>
+      window.removeEventListener(
+        "chat-scroll-bottom",
+        handleScrollRequest
+      );
+  }, []);
 
   /* ================= TOUCH HANDLERS ================= */
 
@@ -93,7 +148,9 @@ export default function ChatMessages({
         /* ================= REPLY LOGIC ================= */
 
         const repliedMessage = m.replyTo
-          ? messages.find((x) => String(x._id) === String(m.replyTo))
+          ? messages.find(
+              (x) => String(x._id) === String(m.replyTo)
+            )
           : null;
 
         const replySenderId =
@@ -105,7 +162,9 @@ export default function ChatMessages({
         return (
           <div
             key={m._id}
-            className={`flex ${me ? "justify-end" : "justify-start"}`}
+            className={`flex ${
+              me ? "justify-end" : "justify-start"
+            }`}
           >
             <div
               className="relative max-w-[75%] group"
@@ -128,22 +187,27 @@ export default function ChatMessages({
 
               {/* Message bubble */}
               <div
-                className={`
-                  relative inline-block
-                  px-3 py-2 pr-6
-                  rounded-2xl
-                  break-words select-none
-                  transition-transform
-                  ${
-                    me
-                      ? "bg-blue-500 text-white rounded-br-none"
-                      : "bg-gray-200 text-black rounded-bl-none"
-                  }
-                `}
-                style={{
-                  transform: `translate3d(${offset}px,0,0)`,
-                }}
-              >
+  className={`
+    relative
+    w-fit
+    px-3 py-2 pr-12
+    rounded-2xl
+    break-words
+    whitespace-pre-wrap
+    select-none
+    transition-transform
+    ${
+      me
+        ? "bg-blue-500 text-white rounded-br-none"
+        : "bg-gray-200 text-black rounded-bl-none"
+    }
+  `}
+  style={{
+    transform: `translate3d(${offset}px,0,0)`,
+    overflowWrap: "anywhere",  
+  }}
+>
+
                 {/* Reply preview */}
                 {m.replyText && (
                   <div
@@ -192,7 +256,7 @@ export default function ChatMessages({
                         size={11}
                         className={
                           m.seen
-                            ? "text-[#00b3ff]" // WhatsApp blue
+                            ? "text-[#00b3ff]"
                             : "text-white"
                         }
                       />
@@ -217,10 +281,54 @@ export default function ChatMessages({
       })}
 
       {typing && (
-        <div className="text-xs text-gray-400 px-2">
-          Typing…
-        </div>
-      )}
+  <div className="flex justify-start">
+    <div className="
+      bg-gray-200
+      rounded-2xl rounded-bl-none
+      px-3 py-3
+      flex items-center gap-1
+      w-fit
+    ">
+      <span className="dot" />
+      <span className="dot delay-1" />
+      <span className="dot delay-2" />
+    </div>
+  </div>
+)}
+
+
+      {showScrollDown && (
+<button
+  onClick={() => {
+    isNearBottomRef.current = true;
+    setShowScrollDown(false);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }}
+  aria-label="Scroll to latest message"
+  className="
+    fixed bottom-24 right-5 z-50
+    h-9 w-9
+    flex items-center justify-center
+    rounded-full
+
+    bg-black/10 backdrop-blur-sm
+    text-gray-700 text-sm
+
+    shadow-[0_4px_12px_rgba(0,0,0,0.12)]
+    ring-1 ring-black/10
+
+    active:scale-95
+    transition-all duration-150 ease-out
+
+    md:h-8 md:w-8
+  "
+>
+  <span className="leading-none">🡳</span>
+</button>
+
+
+)}
+
 
       <div ref={bottomRef} />
     </div>

@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { FiCheckCircle, FiBell } from "react-icons/fi";
+import { useEffect, useRef } from "react";
+import { FiBell } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/notificationContext";
 import { markNotificationRead } from "../../services/notificationApi";
@@ -7,7 +7,9 @@ import { markNotificationRead } from "../../services/notificationApi";
 const NotificationDropdown = ({ onClose }) => {
   const navigate = useNavigate();
   const { notifications, setNotifications } = useNotifications();
+  const dropdownRef = useRef(null);
 
+  // 🔹 Mark all unread as read when dropdown opens
   useEffect(() => {
     const unread = notifications.filter((n) => !n.isRead);
     if (unread.length === 0) return;
@@ -18,6 +20,26 @@ const NotificationDropdown = ({ onClose }) => {
       prev.map((n) => ({ ...n, isRead: true }))
     );
   }, []);
+
+  // 🔹 Close on outside click / touch
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [onClose]);
 
   const markAsRead = async (id) => {
     await markNotificationRead(id);
@@ -30,6 +52,7 @@ const NotificationDropdown = ({ onClose }) => {
 
   return (
     <div
+      ref={dropdownRef}
       className="
         fixed sm:absolute
         inset-x-2 sm:inset-x-auto
@@ -72,11 +95,7 @@ const NotificationDropdown = ({ onClose }) => {
               border-b last:border-b-0
               transition
               active:bg-gray-100
-              ${
-                n.isRead
-                  ? "bg-white"
-                  : "bg-blue-50"
-              }
+              ${n.isRead ? "bg-white" : "bg-blue-50"}
             `}
           >
             <div className="flex gap-3 items-start">

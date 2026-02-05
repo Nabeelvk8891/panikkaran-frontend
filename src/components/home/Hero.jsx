@@ -3,7 +3,7 @@ export default function Hero() {
     <section
       className="
         relative
-        min-h-[60vh] sm:min-h-[70vh] md:min-h-[85vh]
+        min-h-[50vh] sm:min-h-[70vh] md:min-h-[85vh]
         flex items-center justify-center
         px-4
         text-white
@@ -14,14 +14,14 @@ export default function Hero() {
         backgroundPosition: "center",
       }}
     >
-      {/* Soft overlay for readability */}
+      {/* Overlay */}
       <div className="absolute inset-0 bg-black/25" />
 
       {/* Content */}
       <div className="relative max-w-3xl text-center">
         <h1
           className="
-            text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+            text-2xl sm:text-4xl md:text-5xl lg:text-6xl
             font-extrabold
             leading-tight
           "
@@ -34,8 +34,8 @@ export default function Hero() {
 
         <p
           className="
-            mt-4
-            text-sm sm:text-base md:text-lg
+            mt-3 sm:mt-4
+            text-xs sm:text-base md:text-lg
             text-white/90
           "
           style={{

@@ -2,6 +2,10 @@ import { useRef, useState } from "react";
 import { socket } from "../../utils/socket";
 import { FaPaperPlane } from "react-icons/fa";
 
+const isMobile =
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
+
 export default function ChatInput({
   chatId,
   myId,
@@ -14,9 +18,14 @@ export default function ChatInput({
   // 🔒 SEND LOCK (CRITICAL FIX)
   const sendingRef = useRef(false);
 
+  // 🔽 REQUEST SCROLL TO BOTTOM
+  const requestScrollToBottom = () => {
+    window.dispatchEvent(new Event("chat-scroll-bottom"));
+  };
+
   const sendMessage = () => {
     if (!text.trim()) return;
-    if (sendingRef.current) return; // 🚫 BLOCK DOUBLE SEND
+    if (sendingRef.current) return;
 
     sendingRef.current = true;
 
@@ -39,7 +48,11 @@ export default function ChatInput({
     // optimistic UI
     setMessages((prev) => [...prev, optimisticMessage]);
 
-    // send to server
+    // ✅ scroll only on desktop
+    if (!isMobile) {
+      requestScrollToBottom();
+    }
+
     socket.emit("sendMessage", {
       chatId,
       text,
@@ -53,7 +66,6 @@ export default function ChatInput({
     setText("");
     setReplyingTo(null);
 
-    // 🔓 RELEASE LOCK (NEXT TICK)
     setTimeout(() => {
       sendingRef.current = false;
     }, 0);
@@ -66,7 +78,9 @@ export default function ChatInput({
           <div className="w-1 self-stretch bg-blue-500 rounded-full" />
 
           <div className="flex-1 truncate">
-            <div className="font-medium text-blue-600">Replying to</div>
+            <div className="font-medium text-blue-600">
+              Replying to
+            </div>
             <div className="truncate text-gray-700">
               {replyingTo.text}
             </div>
@@ -84,9 +98,20 @@ export default function ChatInput({
       <div className="flex items-end gap-2">
         <textarea
           value={text}
+          onFocus={() => {
+            // ✅ desktop only
+            if (!isMobile) {
+              requestScrollToBottom();
+            }
+          }}
           onChange={(e) => {
             setText(e.target.value);
             socket.emit("typing", { chatId, sender: myId });
+
+            // ✅ desktop only
+            if (!isMobile) {
+              requestScrollToBottom();
+            }
 
             e.target.style.height = "auto";
             e.target.style.height =

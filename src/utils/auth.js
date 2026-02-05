@@ -1,59 +1,85 @@
 import { socket } from "../utils/socket";
 
 /* ================= AUTH CHANGE EVENT ================= */
-
 const notifyAuthChange = () => {
   window.dispatchEvent(new Event("auth-change"));
 };
 
 /* ================= TOKEN ================= */
-
-export const getToken = () => {
-  return localStorage.getItem("token");
-};
+export const getToken = () => localStorage.getItem("token");
 
 /* ================= AUTH OBJECT ================= */
-
 export const getAuth = () => {
   try {
     const auth = localStorage.getItem("auth");
     if (!auth) return null;
     return JSON.parse(auth);
-  } catch (err) {
-    console.error("getAuth error:", err);
+  } catch {
     return null;
   }
 };
 
 /* ================= USER ================= */
-
-export const getUser = () => {
-  const auth = getAuth();
-  return auth?.user || null;
-};
+export const getUser = () => getAuth()?.user || null;
 
 /* ================= ROLE ================= */
-
-export const getRole = () => {
-  return localStorage.getItem("role");
-};
+export const getRole = () => localStorage.getItem("role");
 
 /* ================= AUTH STATUS ================= */
+export const isAuthenticated = () =>
+  !!localStorage.getItem("token") &&
+  !!localStorage.getItem("auth");
 
-export const isAuthenticated = () => {
-  return (
-    !!localStorage.getItem("token") &&
-    !!localStorage.getItem("auth")
-  );
-};
+export const isUserBlocked = () => getUser()?.isBlocked === true;
 
-export const isUserBlocked = () => {
+/* ================= SOCKET AUTH SYNC ================= */
+
+// 🔥 DO NOT block rebinds
+let listenersAttached = false;
+
+const syncSocketAuth = () => {
   const user = getUser();
-  return user?.isBlocked === true;
+  if (!user?._id) return;
+
+  // ensure connection
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  // 🔥 ALWAYS emit online (safe)
+  socket.emit("online", user._id);
+  console.log("🟢 ONLINE EMITTED:", user._id);
+
+  // attach listeners ONCE
+  if (listenersAttached) return;
+  listenersAttached = true;
+
+  socket.on("connect", () => {
+    console.log("✅ SOCKET CONNECTED:", socket.id);
+    const currentUser = getUser();
+    if (currentUser?._id) {
+      socket.emit("online", currentUser._id);
+      console.log("🟢 RE-ONLINE (reconnect):", currentUser._id);
+    }
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("🔴 SOCKET DISCONNECTED:", reason);
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("Socket error:", err.message);
+  });
 };
+
+/* ================= INITIAL SYNC ================= */
+// page load / refresh
+setTimeout(syncSocketAuth, 0);
+
+/* ================= LISTEN FOR AUTH CHANGES ================= */
+window.addEventListener("auth-change", syncSocketAuth);
 
 /* ================= LOGIN ================= */
-
 export const setAuth = (data) => {
   if (!data?.token || !data?.user) return;
 
@@ -61,23 +87,16 @@ export const setAuth = (data) => {
   localStorage.setItem("auth", JSON.stringify(data));
   localStorage.setItem("role", data.role || data.user.role);
 
-  notifyAuthChange();
+  notifyAuthChange(); // 🔥 triggers socket sync
 };
 
 /* ================= LOGOUT ================= */
-
 export const logout = () => {
   try {
-    if (socket?.connected) {
-      socket.emit("offline");
-
-      setTimeout(() => {
-        socket.disconnect();
-      }, 100);
+    if (socket.connected) {
+      socket.disconnect(); // triggers lastSeen on backend
     }
-  } catch (err) {
-    console.error("Socket disconnect error:", err);
-  }
+  } catch {}
 
   localStorage.clear();
   notifyAuthChange();

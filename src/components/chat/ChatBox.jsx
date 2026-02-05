@@ -130,18 +130,17 @@ useEffect(() => {
 
 
   /* ================= SOCKET ================= */
-  useEffect(() => {
-    if (!chatId || !myId) return;
+ useEffect(() => {
+  if (!chatId || !myId) return;
 
-    if (!socket.connected) socket.connect();
+  const joinChat = () => {
+    if (joinedRef.current) return;
+    joinedRef.current = true;
+    socket.emit("joinChat", { chatId, userId: myId });
+  };
 
-    const joinChat = () => {
-      if (joinedRef.current) return;
-      joinedRef.current = true;
-      socket.emit("joinChat", { chatId, userId: myId });
-    };
+  joinChat();
 
-    joinChat();
 
     socket.off("receiveMessage");
     socket.off("typing");
@@ -244,10 +243,12 @@ useEffect(() => {
     <div className="flex flex-col h-full bg-white overflow-hidden rounded-xl shadow-md border border-gray-200">
       {otherUser && (
         <ChatHeader
-          otherUser={otherUser}
-          chatId={chatId}
-          onClose={onClose}
-        />
+  otherUser={otherUser}
+  chatId={chatId}
+  isChatOpen={true}
+  onClose={onClose}
+/>
+
       )}
 
       <ChatMessages

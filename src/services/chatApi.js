@@ -6,6 +6,12 @@ export const getChats = async () => {
   return res.data;
 };
 
+/* ================= GET UNREAD CHAT COUNTS ================= */
+export const getUnreadChatCounts = async () => {
+  const res = await api.get("/chats/unread-counts");
+  return res.data;
+};
+
 /* ================= CLEAR CHAT (ONLY ME) ================= */
 export const clearChatForMe = async (chatId) => {
   const res = await api.post(`/chats/clear/${chatId}`);

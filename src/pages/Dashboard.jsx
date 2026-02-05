@@ -32,9 +32,8 @@ export default function Dashboard() {
     if (!navigator.geolocation) return setCoords(null);
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      },
+      (pos) =>
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => setCoords(null)
     );
   }, []);
@@ -66,11 +65,8 @@ export default function Dashboard() {
           ),
         ];
 
-        setJobs(
-          mergedJobs.filter((job) => !job.isBlocked).slice(0, 6)
-        );
-      } catch (err) {
-        console.error(err);
+        setJobs(mergedJobs.filter((job) => !job.isBlocked).slice(0, 6));
+      } catch {
         setJobs([]);
       } finally {
         setLoading(false);
@@ -91,47 +87,139 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* ================= HERO ================= */}
       <section className="relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.15),transparent_60%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-gray-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_65%)]" />
+
+        <div className="relative max-w-7xl mx-auto px-4 py-10 sm:py-20 text-center">
+          <h1 className="text-2xl sm:text-5xl font-bold text-gray-900 leading-tight">
             Skilled work,
             <span className="block text-blue-600">real opportunities</span>
           </h1>
 
-          <p className="mt-4 sm:mt-6 text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
-            Find trusted daily-wage jobs and workers near you. Fast, local and reliable.
+          <p className="mt-3 sm:mt-6 text-sm sm:text-base text-gray-600 max-w-xl mx-auto">
+            Find trusted daily-wage jobs and workers near you.
           </p>
 
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-            <HeroButton
-              icon={<FaSearch />}
-              label="Find Workers"
-              primary
-              onClick={() => navigate("/workers")}
-            />
-            <HeroButton
-              icon={<FaPlusCircle />}
-              label="Post a Job"
-              onClick={() => navigate("/post-job")}
-            />
-            <HeroButton
-              icon={<FaBriefcase />}
-              label="My Jobs"
-              onClick={() => navigate("/my-jobs")}
-            />
-          </div>
+     {/* ================= ACTIONS ================= */}
+<div className="mt-7 sm:mt-10">
+
+  {/* ===== MOBILE ACTION CARDS (REFINED) ===== */}
+  <div className="sm:hidden grid grid-cols-2 gap-3">
+    {/* Find Workers */}
+    <div
+      onClick={() => navigate("/workers")}
+      className="
+        cursor-pointer
+        bg-white
+        border
+        rounded-2xl
+        p-4
+        shadow-sm
+        transition
+        active:scale-95
+      "
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <FaSearch className="text-base" />
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-gray-900 leading-tight">
+            Find Workers
+          </p>
+          <p className="text-xs text-gray-500">
+            Nearby skills
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Post Job */}
+    <div
+      onClick={() => navigate("/post-job")}
+      className="
+        cursor-pointer
+        bg-white
+        border
+        rounded-2xl
+        p-4
+        shadow-sm
+        transition
+        active:scale-95
+      "
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <FaPlusCircle className="text-base" />
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-gray-900 leading-tight">
+            Post Job
+          </p>
+          <p className="text-xs text-gray-500">
+            Post your job
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* ===== MOBILE MY JOBS BUTTON ===== */}
+  <button
+    onClick={() => navigate("/my-jobs")}
+    className="
+      sm:hidden
+      mt-3
+      w-full
+      flex items-center justify-center gap-2
+      rounded-xl
+      bg-white
+      border
+      px-4 py-3
+      text-sm font-medium
+      text-gray-800
+      shadow-sm
+      transition
+      active:scale-95
+    "
+  >
+    <FaBriefcase className="text-gray-600" />
+    My Jobs
+  </button>
+
+  {/* ===== DESKTOP BUTTONS (UNCHANGED) ===== */}
+  <div className="hidden sm:flex gap-4 justify-center">
+    <HeroButton
+      icon={<FaSearch />}
+      label="Find Workers"
+      primary
+      onClick={() => navigate("/workers")}
+    />
+    <HeroButton
+      icon={<FaPlusCircle />}
+      label="Post Job"
+      onClick={() => navigate("/post-job")}
+    />
+    <HeroButton
+      icon={<FaBriefcase />}
+      label="My Jobs"
+      onClick={() => navigate("/my-jobs")}
+    />
+  </div>
+
+</div>
+
 
           {hasProfile === false && (
-            <div className="mt-8 sm:mt-10 inline-flex flex-col sm:flex-row items-center gap-3 rounded-xl border border-yellow-300 bg-yellow-50 px-5 py-3 text-sm shadow-sm">
-              <div className="flex items-center gap-2">
+            <div className="mt-6 mx-auto max-w-md rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-xs sm:text-sm flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-gray-700">
                 <FaUser className="text-yellow-600" />
-                <span className="text-gray-700">
-                  Complete your profile to appear in searches
-                </span>
+                Complete your profile
               </div>
               <button
                 onClick={() => navigate("/profile-edit")}
-                className="font-medium text-blue-600 hover:underline"
+                className="font-medium text-blue-600"
               >
                 Complete →
               </button>
@@ -141,32 +229,32 @@ export default function Dashboard() {
       </section>
 
       {/* ================= JOB LIST ================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
-            Opportunities near you
+      <section className="max-w-7xl mx-auto px-4 py-10 sm:py-16">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-lg sm:text-2xl font-semibold text-gray-900">
+            Jobs near you
           </h2>
           <button
             onClick={() => navigate("/workers")}
-            className="text-sm font-medium text-blue-600 hover:underline self-start sm:self-auto"
+            className="text-xs sm:text-sm font-medium text-blue-600"
           >
-            View all
+            View all →
           </button>
         </div>
 
         {loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="h-28 rounded-2xl bg-gray-100 animate-pulse"
+                className="h-24 rounded-xl bg-gray-100 animate-pulse"
               />
             ))}
           </div>
         ) : jobs.length === 0 ? (
-          <p className="text-gray-500">No jobs available right now</p>
+          <p className="text-sm text-gray-500">No jobs available</p>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {jobs.map((job) => (
               <JobCard
                 key={job._id}
@@ -180,7 +268,7 @@ export default function Dashboard() {
 
       {/* ================= FOOTER ================= */}
       <footer className="border-t bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-gray-500">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-gray-500">
           <span>© {new Date().getFullYear()} • Built for real work</span>
           <span className="text-gray-400">Simple • Local • Trustworthy</span>
         </div>
@@ -190,14 +278,15 @@ export default function Dashboard() {
 }
 
 /* ================= HERO BUTTON ================= */
-function HeroButton({ icon, label, onClick, primary }) {
+function HeroButton({ icon, label, onClick, primary, full }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center gap-3 w-full sm:w-auto rounded-xl px-6 py-3 text-sm font-medium transition-all active:scale-95
+      className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition active:scale-95
+        ${full ? "col-span-2 sm:col-span-1" : ""}
         ${
           primary
-            ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
+            ? "bg-blue-600 text-white shadow hover:bg-blue-700"
             : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-50"
         }`}
     >
@@ -212,11 +301,11 @@ function JobCard({ job, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition hover:-translate-y-1 hover:shadow-xl"
+      className="cursor-pointer rounded-xl border bg-white p-4 transition hover:shadow-lg"
     >
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
+      <div className="flex justify-between gap-3">
         <div className="flex gap-3">
-          <div className="h-10 w-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
+          <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
             {job.user?.profileImage ? (
               <img
                 src={job.user.profileImage}
@@ -224,30 +313,28 @@ function JobCard({ job, onClick }) {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <FaUser className="text-gray-400 text-sm" />
+              <FaUser className="text-gray-400 text-xs" />
             )}
           </div>
 
           <div>
-            <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition">
+            <h3 className="text-sm font-medium text-gray-900">
               {job.title}
             </h3>
-            <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+            <p className="text-xs text-gray-500 flex items-center gap-1">
               <FaMapMarkerAlt /> {job.location}
             </p>
-            <p className="mt-1 text-xs text-gray-400">
-              Posted {timeAgo(job.createdAt)}
+            <p className="text-[11px] text-gray-400">
+              {timeAgo(job.createdAt)}
             </p>
           </div>
         </div>
 
-        <div className="text-left sm:text-right mt-2 sm:mt-0">
-          <p className="text-green-600 font-semibold text-sm flex items-center sm:justify-end gap-1">
+        <div className="text-right">
+          <p className="text-green-600 font-semibold text-sm flex items-center justify-end gap-1">
             <FaRupeeSign /> {job.wage}
           </p>
-          <span className="mt-2 inline-block text-xs text-blue-600 font-medium">
-            View →
-          </span>
+          <span className="text-xs text-blue-600">View →</span>
         </div>
       </div>
     </div>
